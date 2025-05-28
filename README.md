@@ -28,7 +28,6 @@
 
 ### Запуск с помощью Docker
 
-<<<<<<< HEAD
 1. Клонируй репозиторий: 
    git clone git clone https://github.com/farfarculule/Weather.git
    cd Weather
