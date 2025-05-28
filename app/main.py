@@ -253,7 +253,6 @@ async def autocomplete(request: Request, city: str):
             cities = []
             if data:
                 for result in data[:5]:
-
                     full_name = result["display_name"]
                     cities.append(full_name)
         except httpx.RequestError as e:
@@ -264,6 +263,8 @@ async def autocomplete(request: Request, city: str):
         [f"<div hx-get='/?city={quote(city)}' hx-swap='innerHTML' hx-target='#content'>{city}</div>" for city in
          cities])
     return f"<div id='suggestions'>{suggestions}</div>"
+
+
 @app.get("/stats", response_class=HTMLResponse)
 async def stats(request: Request):
     logger.debug("Accessed /stats route")
