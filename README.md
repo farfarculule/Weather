@@ -30,5 +30,6 @@
 
 1. Клонируй репозиторий:
    ```bash
-   git clone https://github.com/<your-username>/weather-app.git
-   cd weather-app
+   git clone https://github.com/farfarculule/Weather.git
+   cd weather
+   docker-compose up --build
