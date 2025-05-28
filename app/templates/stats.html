@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Статистика запросов</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        a { text-decoration: none; color: #007bff; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>Статистика запросов</h1>
+    <p><a href="/" hx-get="/" hx-swap="innerHTML" hx-target="#content">Вернуться к прогнозу</a></p>
+    <div id="content">
+        {% if stats %}
+            <table>
+                <tr>
+                    <th>Город</th>
+                    <th>Количество запросов</th>
+                </tr>
+                {% for city, count in stats %}
+                    <tr>
+                        <td><a href="/?city={{ city }}" hx-get="/?city={{ city }}" hx-swap="innerHTML" hx-target="#content">{{ city }}</a></td>
+                        <td>{{ count }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>Статистика пуста</p>
+        {% endif %}
+    </div>
+</body>
+</html>

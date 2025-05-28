@@ -1,0 +1,34 @@
+---
+
+### Инструкции по применению
+
+1. Обнови файл `README.md`:
+   - Замени содержимое файла README.md в корне проекта (`C:\MyProject\Weather\README.md`) на текст выше.
+
+2. Добавь изменения в Git:
+   - Перейди в папку проекта:
+
+     cd C:\MyProject\Weather
+
+   - Добавь обновлённый файл:
+
+     git add README.md
+
+   - Сделай коммит:
+
+     git commit -m "Update README: Combine all changes into one file"
+
+   - Отправь изменения на GitHub:
+
+     git push origin main
+
+3. Проверь на GitHub:
+   - Перейди на страницу твоего репозитория (`https://github.com/<your-username>/weather-app`).
+   - Убедись, что README.md обновился и отображает весь текст корректно.
+
+---
+
+### Примечания
+
+- Убедись, что заменил <your-username> на своё имя пользователя GitHub в URL репозитория.
+- Если у тебя уже есть другие файлы (например, LICENSE`), они сохранятся, и Git добавит только обновлённый `README.md.

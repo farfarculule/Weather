@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Прогноз погоды</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            overflow-y: hidden;
+            height: 100vh;
+            background-image: url('/static/images/{{ weather_condition }}.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 1s ease-in-out;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+        /* Отладочный стиль для проверки фона */
+        body::after {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: red;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        .error { color: #ff5555; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #000;
+            text-shadow: none;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            width: 20%;
+            max-width: 120px;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .current-time {
+            background-color: #d0d0d0;
+        }
+        #suggestions {
+            border: 1px solid #ddd;
+            background: rgba(255, 255, 255, 0.9);
+            position: absolute;
+            z-index: 1;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 200px;
+            color: #000;
+        }
+        #suggestions div {
+            padding: 5px;
+            cursor: pointer;
+        }
+        #suggestions div:hover { background: #f0f0f0; }
+        .stats-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .stats-button:hover { background-color: #0056b3; }
+        .current-weather {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 70%;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #000;
+            text-shadow: none;
+        }
+        .hourly-forecast {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 70%;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #000;
+            text-shadow: none;
+        }
+        .hourly-forecast h3 {
+            position: sticky;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+            padding: 10px 0;
+            z-index: 2;
+        }
+        .hourly-table {
+            max-height: 200px;
+            overflow-y: auto;
+            display: block;
+        }
+        .history {
+            position: absolute;
+            right: 20px;
+            top: 80px;
+            width: 200px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            overflow-y: auto;
+            max-height: 400px;
+            color: #000;
+            text-shadow: none;
+        }
+        .history ul {
+            list-style: none;
+            padding: 0;
+        }
+        .history li { margin: 5px 0; }
+        .history a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .history a:hover { text-decoration: underline; }
+        form input, form button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+        }
+        form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <div id="content" hx-swap-oob="true">
+        <a href="/stats" class="stats-button" hx-get="/stats" hx-swap="innerHTML" hx-target="#content">Посмотреть статистику</a>
+
+        <form method="get" action="/">
+            <input
+                type="text"
+                name="city"
+                placeholder="Введите город"
+                value="{{ city or '' }}"
+                hx-get="/autocomplete"
+                hx-trigger="input changed delay:500ms"
+                hx-target="#suggestions"
+                hx-swap="outerHTML"
+            >
+            <button type="submit">Получить прогноз</button>
+            <div id="suggestions"></div>
+        </form>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% if weather %}
+            <div class="current-weather">
+                <h2>Погода в {{ city }}</h2>
+                {% if weather.current_weather %}
+                    <h3>Текущая погода</h3>
+                    <p>{{ weather.current_weather.weathercode | weather_description }}</p>
+                    <p>Температура: {{ weather.current_weather.temperature }} °C</p>
+                    <p>Скорость ветра: {{ weather.current_weather.windspeed }} км/ч</p>
+                {% else %}
+                    <p class="error">Данные о текущей погоде недоступны</p>
+                {% endif %}
+            </div>
+
+            <div class="hourly-forecast">
+                <h3>Прогноз на ближайшие часы</h3>
+                <div class="hourly-table">
+                    {% if weather.hourly and weather.hourly.time %}
+                        {% set closest_time = none %}
+                        {% set min_diff = 999999999 %}
+                        {% for i in range(weather.hourly.time|length) %}
+                            {% set forecast_time = weather.hourly.time[i] %}
+                            {% set forecast_datetime = forecast_time | format_datetime %}
+                            {% set current_datetime = current_time | format_datetime %}
+                            {% set forecast_ts = (forecast_time | replace("T", " ") | strptime("%Y-%m-%d %H:%M")).timestamp() %}
+                            {% set current_ts = (current_time | replace("T", " ") | strptime("%Y-%m-%d %H:%M")).timestamp() %}
+                            {% set time_diff = (current_ts - forecast_ts) | abs %}
+                            {% if time_diff < min_diff %}
+                                {% set min_diff = time_diff %}
+                                {% set closest_time = forecast_time %}
+                            {% endif %}
+                        {% endfor %}
+                        <table>
+                            <tr>
+                                <th>Время</th>
+                                <th>Погода</th>
+                                <th>Температура (°C)</th>
+                                <th>Влажность (%)</th>
+                                <th>Скорость ветра (км/ч)</th>
+                            </tr>
+                            {% for i in range(weather.hourly.time|length) %}
+                                <tr {% if weather.hourly.time[i] == closest_time %}class="current-time"{% endif %}>
+                                    <td>{{ weather.hourly.time[i] | format_datetime }}</td>
+                                    <td>{{ weather.hourly.weather_code[i] | weather_description }}</td>
+                                    <td>{{ weather.hourly.temperature_2m[i] }}</td>
+                                    <td>{{ weather.hourly.relative_humidity_2m[i] }}</td>
+                                    <td>{{ weather.hourly.wind_speed_10m[i] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% else %}
+                        <p class="error">Почасовой прогноз недоступен</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="history">
+            <h3>История поиска</h3>
+            {% if history %}
+                <ul>
+                    {% for city, timestamp in history %}
+                        <li><a href="/?city={{ city }}" hx-get="/?city={{ city }}" hx-swap="innerHTML" hx-target="#content">{{ city }}</a> ({{ timestamp | format_date }})</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>История пуста</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
