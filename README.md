@@ -64,10 +64,8 @@
 - README.md: Этот файл с документацией.
 - LICENSE: Лицензия проекта.
 
-=======
 1. Клонируй репозиторий:
    ```bash
    git clone https://github.com/farfarculule/Weather.git
    cd weather
-   docker-compose up --build
->>>>>>> e57b046132e88528e98597bcc138be5c20deb122
+
